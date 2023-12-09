@@ -1,15 +1,22 @@
 using Baristaa.Core;
 using Baristaa.Core.Handlers;
 using Baristaa.Core.Providers;
+using Baristaa.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
-builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+builder.Services.AddHttpClient("weatherapi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["WeatherApi:Address"]!);
+});
+
+builder.Services.AddTransient<IWeatherService, WeatherService>();
+builder.Services.AddTransient<IDateTimeProvider, DateTimeProvider>();
+
 builder.Services.AddTransient<IRequestHandler>(x =>
-        new CoffeeHandler(x.GetRequiredService<DateHandler>())
+        new CoffeeHandler(x.GetRequiredService<IWeatherService>(), x.GetRequiredService<DateHandler>())
     );
 
 builder.Services.AddScoped(x =>
